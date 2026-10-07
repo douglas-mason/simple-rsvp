@@ -1,0 +1,27 @@
+{
+  "name": "simple-rsvp",
+  "version": "1.0.0",
+  "description": "Mobile-first RSVP app",
+  "main": "server.js",
+  "engines": {
+    "node": ">=20.12"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "test": "jest"
+  },
+  "jest": {
+    "testMatch": [
+      "**/tests/**/*.test.js"
+    ],
+    "testEnvironment": "node"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  },
+  "devDependencies": {
+    "jest": "^30.4.2",
+    "jsdom": "^20.0.3",
+    "supertest": "^7.2.2"
+  }
+}

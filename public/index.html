@@ -1,0 +1,1072 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>☑️ Simple RSVP</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --blue:        #003f7f;
+      --blue-mid:    #00519e;
+      --blue-light:  #006BB6;
+      --blue-accent: #4a9fe0;
+      --orange:      #F58426;
+      --orange-dark: #d96f15;
+      --red:         #c0392b;
+      --bg:          #001228;
+      --card:        #001e45;
+      --card2:       #002458;
+      --border:      #0a4080;
+      --text:        #e8f0ff;
+      --text-muted:  #6a90c8;
+      --radius:      14px;
+      --radius-sm:   8px;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      min-height: 100vh;
+      padding-bottom: 32px;
+    }
+
+    header {
+      background: linear-gradient(135deg, var(--blue) 0%, var(--blue-mid) 100%);
+      padding: 20px 16px 16px;
+      text-align: center;
+      border-bottom: 2px solid var(--orange);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      transition: background 0.3s, border-color 0.3s;
+    }
+
+    header.admin-mode {
+      background: linear-gradient(135deg, var(--orange-dark) 0%, var(--orange) 100%);
+      border-bottom-color: rgba(0,0,0,0.2);
+    }
+
+    header h1 {
+      font-size: 1.5rem;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+    }
+
+    header .subtitle {
+      font-size: 0.8rem;
+      color: var(--orange);
+      margin-top: 2px;
+    }
+
+    header.admin-mode .subtitle {
+      color: #3a3a3a;
+    }
+
+    .admin-badge {
+      display: inline-block;
+      background: rgba(0,0,0,0.15);
+      color: #3a3a3a;
+      font-size: 0.65rem;
+      font-weight: 800;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      padding: 2px 10px;
+      border-radius: 20px;
+      margin-top: 6px;
+    }
+
+    .main {
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    /* Banner */
+    .banner {
+      display: none;
+      border-radius: var(--radius);
+      padding: 16px;
+      text-align: center;
+      font-weight: 700;
+      font-size: 1.1rem;
+      letter-spacing: 0.5px;
+    }
+    .banner.cancelled {
+      display: block;
+      background: var(--red);
+      color: #fff;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.85; }
+    }
+
+    /* Card */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+    }
+
+    .card.admin-card {
+      border-color: var(--orange-dark);
+    }
+
+    .card-title {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--blue-accent);
+      margin-bottom: 12px;
+    }
+
+    .admin-card .card-title {
+      color: var(--orange);
+    }
+
+    /* Form */
+    label {
+      display: block;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-bottom: 5px;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      background: var(--card2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      font-size: 1rem;
+      padding: 10px 12px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    input[type="text"]:focus {
+      border-color: var(--blue-accent);
+    }
+    input[type="text"]::placeholder {
+      color: var(--text-muted);
+    }
+
+    /* Toggle */
+    .toggle-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    .toggle-btn {
+      flex: 1;
+      padding: 10px;
+      border-radius: var(--radius-sm);
+      border: 2px solid var(--border);
+      background: var(--card2);
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .toggle-btn.yes.active {
+      background: var(--blue-light);
+      border-color: var(--blue-accent);
+      color: #fff;
+    }
+    .toggle-btn.no.active {
+      background: #5a2020;
+      border-color: #c0392b;
+      color: #fff;
+    }
+    .toggle-btn:not(.active):hover {
+      border-color: var(--text-muted);
+    }
+
+    /* Guests */
+    .guests-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .guests-row label {
+      margin: 0;
+      flex: 1;
+    }
+    .guests-controls {
+      display: flex;
+      align-items: center;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+    }
+    .guests-btn {
+      width: 36px;
+      height: 36px;
+      background: var(--card2);
+      border: none;
+      color: var(--text);
+      font-size: 1.2rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s;
+    }
+    .guests-btn:hover { background: var(--border); }
+    .guests-count {
+      width: 36px;
+      text-align: center;
+      font-size: 1rem;
+      font-weight: 600;
+      background: var(--bg);
+      color: var(--text);
+      pointer-events: none;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Action buttons */
+    .action-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 14px;
+    }
+    .btn {
+      flex: 1;
+      padding: 12px;
+      border-radius: var(--radius-sm);
+      border: none;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s;
+      letter-spacing: 0.3px;
+    }
+    .btn:active { transform: scale(0.97); }
+    .btn-primary {
+      background: var(--orange);
+      color: #3a3a3a;
+    }
+    .btn-primary:hover { background: var(--orange-dark); }
+    .btn-secondary {
+      background: var(--card2);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn-secondary:hover { border-color: var(--text-muted); }
+    .btn-danger {
+      background: #5a2020;
+      color: #e88;
+      border: 1px solid #7a3030;
+    }
+    .btn-danger:hover { background: #6b2525; }
+    .btn-cancel-game {
+      width: 100%;
+      background: transparent;
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+      font-size: 0.85rem;
+      padding: 10px;
+    }
+    .btn-cancel-game:hover {
+      border-color: var(--red);
+      color: #e88;
+    }
+    .btn-uncancel {
+      width: 100%;
+      background: var(--blue-light);
+      color: #fff;
+      font-size: 0.95rem;
+      padding: 12px;
+    }
+    .btn-uncancel:hover { background: var(--blue-accent); }
+    .btn-game-settings {
+      width: 100%;
+      background: transparent;
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+      font-size: 0.85rem;
+      padding: 10px;
+      font-weight: 600;
+    }
+    .btn-game-settings:hover {
+      border-color: var(--text-muted);
+      color: var(--text);
+    }
+    .btn-exit-admin {
+      width: 100%;
+      background: var(--orange);
+      color: #3a3a3a;
+      border: none;
+      font-size: 0.9rem;
+      padding: 10px;
+      font-weight: 700;
+    }
+    .btn-exit-admin:hover { background: var(--orange-dark); }
+    .btn-reset {
+      width: 100%;
+      background: transparent;
+      color: #e88;
+      border: 1px solid #7a3030;
+      font-size: 0.85rem;
+      padding: 10px;
+      font-weight: 600;
+    }
+    .btn-reset:hover { background: rgba(90,32,32,0.5); }
+
+    /* Stats bar */
+    .stats-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.85rem;
+    }
+    .stats-attending {
+      font-weight: 700;
+      color: var(--orange);
+    }
+    .stats-clears {
+      color: var(--text-muted);
+      font-size: 0.75rem;
+    }
+    .stats-total {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-top: 3px;
+    }
+
+    /* RSVP list */
+    .rsvp-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .rsvp-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--card2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 10px 12px;
+    }
+    .rsvp-num {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      min-width: 20px;
+      text-align: right;
+    }
+    .rsvp-name {
+      flex: 1;
+      font-size: 0.95rem;
+      font-weight: 600;
+    }
+    .rsvp-name.is-you {
+      color: var(--orange);
+    }
+    .rsvp-guests {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+    .rsvp-status {
+      font-size: 1rem;
+      min-width: 20px;
+      text-align: center;
+    }
+    .rsvp-status.yes { color: var(--blue-accent); }
+    .rsvp-status.no  { color: #c0392b; }
+    .rsvp-remove-btn {
+      background: none;
+      border: 1px solid transparent;
+      color: #c0392b;
+      font-size: 0.8rem;
+      cursor: pointer;
+      padding: 2px 7px;
+      border-radius: 4px;
+      line-height: 1.4;
+      transition: all 0.15s;
+      flex-shrink: 0;
+    }
+    .rsvp-remove-btn:hover {
+      background: rgba(192,57,43,0.15);
+      border-color: #c0392b;
+    }
+
+    .empty-state {
+      text-align: center;
+      color: var(--text-muted);
+      padding: 24px 0;
+      font-size: 0.9rem;
+    }
+
+    .divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 4px 0;
+    }
+
+    .error-msg {
+      color: #e88;
+      font-size: 0.8rem;
+      margin-top: 6px;
+      display: none;
+    }
+    .error-msg.visible { display: block; }
+
+    /* All Aboard cross-promo */
+    .promo-callout {
+      background: var(--card2);
+      border: 1px solid var(--blue-accent);
+      border-radius: var(--radius);
+      padding: 11px 14px;
+      font-size: 0.85rem;
+      line-height: 1.45;
+      text-align: center;
+      color: var(--text);
+    }
+    .promo-callout a,
+    .promo-modal-text a {
+      color: var(--orange);
+      font-weight: 700;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+    .promo-callout a:hover,
+    .promo-modal-text a:hover {
+      color: var(--orange-dark);
+    }
+
+    /* Promo modal sits above the PIN modal if both are ever open */
+    #promoModal { z-index: 110; }
+    .promo-modal-text {
+      font-size: 0.9rem;
+      line-height: 1.5;
+      color: var(--text-muted);
+    }
+
+    /* PIN Modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .modal-overlay.open {
+      display: flex;
+    }
+    .modal {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px 20px 20px;
+      width: 100%;
+      max-width: 320px;
+    }
+    .modal-title {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .modal-subtitle {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+    }
+    .pin-input {
+      width: 100%;
+      background: var(--card2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      font-size: 1.4rem;
+      font-weight: 700;
+      letter-spacing: 0.5rem;
+      text-align: center;
+      padding: 10px 12px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .pin-input:focus { border-color: var(--blue-accent); }
+    .pin-input.error { border-color: var(--red); }
+    .pin-error {
+      color: #e88;
+      font-size: 0.8rem;
+      margin-top: 6px;
+      min-height: 18px;
+    }
+    .modal-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 16px;
+    }
+  </style>
+</head>
+<body>
+
+<header id="siteHeader">
+  <h1>☑️ Simple RSVP</h1>
+  <div class="subtitle">Who's in for the game?</div>
+  <div id="adminBadge" style="display:none"><span class="admin-badge">⚙ Admin Mode</span></div>
+</header>
+
+<div class="main">
+
+  <div id="cancelBanner" class="banner">
+    🚫 TODAY'S GAME IS CANCELLED
+  </div>
+
+  <div class="promo-callout" id="promoCallout">
+    Head over to <a href="https://www.getallaboard.app" target="_blank" rel="noopener noreferrer">All Aboard</a> to get your own event link
+  </div>
+
+  <div class="card" id="formCard">
+    <div class="card-title">Your RSVP</div>
+
+    <label for="nameInput">Your name</label>
+    <input type="text" id="nameInput" placeholder="Enter your name" autocomplete="off" />
+    <div class="error-msg" id="nameError">Please enter your name.</div>
+
+    <div class="toggle-row">
+      <button class="toggle-btn yes active" id="btnYes" onclick="setAttending(true)">✓ I'm in</button>
+      <button class="toggle-btn no" id="btnNo" onclick="setAttending(false)">✗ Can't make it</button>
+    </div>
+
+    <div class="guests-row">
+      <label>Extra guests</label>
+      <div class="guests-controls">
+        <button class="guests-btn" onclick="changeGuests(-1)">−</button>
+        <div class="guests-count" id="guestsCount">0</div>
+        <button class="guests-btn" onclick="changeGuests(1)">+</button>
+      </div>
+    </div>
+
+    <div class="action-row" id="actionRow">
+      <button class="btn btn-primary" id="submitBtn" onclick="submitRsvp()">Submit RSVP</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="stats-bar">
+      <span class="stats-attending" id="statsAttending">0 attending</span>
+      <span class="stats-clears" id="statsClears"></span>
+    </div>
+    <div class="stats-total" id="statsTotal"></div>
+    <hr class="divider" style="margin: 10px 0 14px;">
+    <div class="rsvp-list" id="rsvpList">
+      <div class="empty-state">No RSVPs yet. Be the first!</div>
+    </div>
+  </div>
+
+  <!-- Admin Panel — visible only in admin mode -->
+  <div class="card admin-card" id="adminPanel" style="display:none">
+    <div class="card-title">⚙️ Game Settings</div>
+
+    <div id="adminCancelSection"></div>
+
+    <hr class="divider" style="margin: 14px 0">
+
+    <div class="card-title" style="margin-bottom: 10px">Add RSVP</div>
+    <label for="adminNameInput">Player name</label>
+    <input type="text" id="adminNameInput" placeholder="Enter player name" autocomplete="off" />
+    <div class="error-msg" id="adminNameError">Please enter a name.</div>
+    <div class="toggle-row">
+      <button class="toggle-btn yes active" id="adminBtnYes" onclick="setAdminAttending(true)">✓ Attending</button>
+      <button class="toggle-btn no" id="adminBtnNo" onclick="setAdminAttending(false)">✗ Not attending</button>
+    </div>
+    <div class="guests-row">
+      <label>Extra guests</label>
+      <div class="guests-controls">
+        <button class="guests-btn" onclick="changeAdminGuests(-1)">−</button>
+        <div class="guests-count" id="adminGuestsCount">0</div>
+        <button class="guests-btn" onclick="changeAdminGuests(1)">+</button>
+      </div>
+    </div>
+    <div class="action-row">
+      <button class="btn btn-primary" id="adminAddBtn" onclick="adminAddRsvp()">Add RSVP</button>
+    </div>
+
+    <hr class="divider" style="margin: 14px 0">
+
+    <button class="btn btn-reset" onclick="openPinModal('reset')">🔄 Reset Game</button>
+  </div>
+
+  <div id="bottomSection">
+    <button class="btn btn-game-settings" onclick="openPinModal('admin')">⚙️ Game Settings</button>
+  </div>
+
+</div>
+
+<!-- PIN Modal -->
+<div class="modal-overlay" id="pinModal" onclick="handleOverlayClick(event)">
+  <div class="modal">
+    <div class="modal-title" id="pinModalTitle">🔒 Enter PIN</div>
+    <div class="modal-subtitle" id="pinModalSubtitle">Enter the 4-digit PIN to continue.</div>
+    <input
+      class="pin-input"
+      id="pinInput"
+      type="password"
+      inputmode="numeric"
+      maxlength="4"
+      placeholder="••••"
+      autocomplete="off"
+      oninput="onPinInput()"
+      onkeydown="onPinKeydown(event)"
+    />
+    <div class="pin-error" id="pinError"></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" style="flex:1" onclick="closePinModal()">Cancel</button>
+      <button class="btn btn-primary" style="flex:1" id="pinSubmitBtn" onclick="submitPin()">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<!-- First-visit All Aboard promo modal -->
+<div
+  class="modal-overlay"
+  id="promoModal"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="promoModalTitle"
+  onclick="handlePromoOverlayClick(event)"
+>
+  <div class="modal">
+    <div class="modal-title" id="promoModalTitle">Have an event of your own?</div>
+    <div class="promo-modal-text">
+      Create your own sign up links at
+      <a href="https://www.getallaboard.app" target="_blank" rel="noopener noreferrer">All Aboard</a>.
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-primary" style="flex:1" id="promoDismissBtn" onclick="dismissPromoModal()">Dismiss</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  var appState = { cancelled: false, rsvps: [], clearsAt: null };
+  var attending = true;
+  var guests = 0;
+  var myName = '';
+  var countdownInterval = null;
+  var pinAction = null;
+  var adminMode = false;
+  var adminAddAttending = true;
+  var adminAddGuests = 0;
+  var PROMO_SEEN_KEY = 'simple_rsvp_allaboard_promo_seen';
+
+  function init() {
+    myName = readStored('simple_rsvp_name') || '';
+    if (myName) document.getElementById('nameInput').value = myName;
+    document.getElementById('nameInput').addEventListener('input', function() {
+      document.getElementById('nameError').classList.remove('visible');
+    });
+    document.getElementById('adminNameInput').addEventListener('input', function() {
+      document.getElementById('adminNameError').classList.remove('visible');
+    });
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape' && isPromoModalOpen()) dismissPromoModal();
+      trapPromoFocus(e);
+    });
+    maybeShowPromoModal();
+    fetchState();
+    setInterval(fetchState, 10000);
+  }
+
+  // Storage helpers. Every localStorage access goes through these so a browser
+  // with storage blocked (private mode, cookies disabled) degrades instead of
+  // throwing partway through init() and leaving a dead page.
+  // Returns the stored string, null when the key is absent, or undefined when
+  // storage could not be read at all — the caller needs those apart.
+  function readStored(key) {
+    try {
+      return localStorage.getItem(key);
+    } catch (e) {
+      return undefined;
+    }
+  }
+
+  function writeStored(key, value) {
+    try {
+      localStorage.setItem(key, value);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  // All Aboard promo modal — shown at most once per browser. The flag is
+  // written as the modal opens, not on dismiss, so a visitor who navigates
+  // away without dismissing it still never sees it twice.
+  function isPromoModalOpen() {
+    return document.getElementById('promoModal').classList.contains('open');
+  }
+
+  function maybeShowPromoModal() {
+    var seen = readStored(PROMO_SEEN_KEY);
+    // Already shown, or storage is unreadable so there is no way to know it
+    // was not — either way, do not show it.
+    if (seen === '1' || seen === undefined) return;
+    // Only show it if the visit can actually be recorded. When storage is
+    // unavailable the modal is skipped, because showing it without being able
+    // to persist the flag means showing it on every single page load.
+    if (!writeStored(PROMO_SEEN_KEY, '1')) return;
+    document.getElementById('promoModal').classList.add('open');
+    focusPromoDismiss();
+  }
+
+  function focusPromoDismiss() {
+    var btn = document.getElementById('promoDismissBtn');
+    if (btn) btn.focus();
+  }
+
+  function dismissPromoModal() {
+    writeStored(PROMO_SEEN_KEY, '1');
+    document.getElementById('promoModal').classList.remove('open');
+  }
+
+  function handlePromoOverlayClick(e) {
+    if (e.target === document.getElementById('promoModal')) dismissPromoModal();
+  }
+
+  // Keep focus inside the promo dialog. Without this, Tab walks into the page
+  // behind the overlay and a keyboard user can open the PIN modal underneath
+  // it, typing a PIN into an input they cannot see.
+  function trapPromoFocus(e) {
+    if (e.key !== 'Tab' || !isPromoModalOpen()) return;
+    e.preventDefault();
+    focusPromoDismiss();
+  }
+
+  function fetchState() {
+    fetch('/api/state').then(function(r) { return r.json(); }).then(function(data) {
+      appState = data;
+      render();
+    }).catch(function(e) { console.error(e); });
+  }
+
+  function submitRsvp() {
+    var name = document.getElementById('nameInput').value.trim();
+    if (!name) {
+      document.getElementById('nameError').classList.add('visible');
+      return;
+    }
+    writeStored('simple_rsvp_name', name);
+    myName = name;
+    var btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.textContent = 'Saving...';
+    fetch('/api/rsvp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: name, attending: attending, guests: guests })
+    }).then(function(r) { return r.json(); }).then(function(data) {
+      if (data.rsvps) {
+        appState.rsvps = data.rsvps;
+        appState.clearsAt = data.clearsAt;
+        render();
+      }
+    }).catch(function(e) { console.error(e); }).finally(function() {
+      btn.disabled = false;
+    });
+  }
+
+  function removeRsvp() {
+    var name = myName || document.getElementById('nameInput').value.trim();
+    if (!name) return;
+    fetch('/api/rsvp', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: name })
+    }).then(function(r) { return r.json(); }).then(function(data) {
+      appState.rsvps = data.rsvps;
+      render();
+    }).catch(function(e) { console.error(e); });
+  }
+
+  // Admin functions
+  function exitAdminMode() {
+    adminMode = false;
+    render();
+  }
+
+  function setAdminAttending(val) {
+    adminAddAttending = val;
+    document.getElementById('adminBtnYes').classList.toggle('active', val);
+    document.getElementById('adminBtnNo').classList.toggle('active', !val);
+  }
+
+  function changeAdminGuests(delta) {
+    adminAddGuests = Math.max(0, adminAddGuests + delta);
+    document.getElementById('adminGuestsCount').textContent = adminAddGuests;
+  }
+
+  function adminAddRsvp() {
+    var name = document.getElementById('adminNameInput').value.trim();
+    if (!name) {
+      document.getElementById('adminNameError').classList.add('visible');
+      return;
+    }
+    var btn = document.getElementById('adminAddBtn');
+    btn.disabled = true;
+    btn.textContent = 'Adding...';
+    fetch('/api/rsvp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: name, attending: adminAddAttending, guests: adminAddGuests })
+    }).then(function(r) { return r.json(); }).then(function(data) {
+      if (data.rsvps) {
+        appState.rsvps = data.rsvps;
+        appState.clearsAt = data.clearsAt;
+        document.getElementById('adminNameInput').value = '';
+        adminAddGuests = 0;
+        adminAddAttending = true;
+        document.getElementById('adminGuestsCount').textContent = '0';
+        setAdminAttending(true);
+        render();
+      }
+    }).catch(function(e) { console.error(e); }).finally(function() {
+      btn.disabled = false;
+      btn.textContent = 'Add RSVP';
+    });
+  }
+
+  function adminRemoveRsvp(name) {
+    fetch('/api/rsvp', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: name })
+    }).then(function(r) { return r.json(); }).then(function(data) {
+      appState.rsvps = data.rsvps;
+      render();
+    }).catch(function(e) { console.error(e); });
+  }
+
+  // PIN Modal
+  function openPinModal(action) {
+    pinAction = action;
+    var titles = {
+      cancel:   "Cancel Today's Game",
+      uncancel: "Uncancel Today's Game",
+      admin:    "Game Settings",
+      reset:    "Reset Game"
+    };
+    var subtitles = {
+      cancel:   "Enter the PIN to cancel today's game.",
+      uncancel: "Enter the PIN to uncancel today's game.",
+      admin:    "Enter the PIN to enter admin mode.",
+      reset:    "Enter the PIN again to confirm. This will clear all RSVPs."
+    };
+    document.getElementById('pinModalTitle').textContent = '🔒 ' + titles[action];
+    document.getElementById('pinModalSubtitle').textContent = subtitles[action];
+    document.getElementById('pinInput').value = '';
+    document.getElementById('pinInput').classList.remove('error');
+    document.getElementById('pinError').textContent = '';
+    document.getElementById('pinModal').classList.add('open');
+    setTimeout(function() { document.getElementById('pinInput').focus(); }, 50);
+  }
+
+  function closePinModal() {
+    document.getElementById('pinModal').classList.remove('open');
+    pinAction = null;
+  }
+
+  function handleOverlayClick(e) {
+    if (e.target === document.getElementById('pinModal')) closePinModal();
+  }
+
+  function onPinInput() {
+    document.getElementById('pinInput').classList.remove('error');
+    document.getElementById('pinError').textContent = '';
+  }
+
+  function onPinKeydown(e) {
+    if (e.key === 'Enter') submitPin();
+    if (e.key === 'Escape') closePinModal();
+  }
+
+  function submitPin() {
+    var pin = document.getElementById('pinInput').value.trim();
+    if (!pin) return;
+    var btn = document.getElementById('pinSubmitBtn');
+    btn.disabled = true;
+    btn.textContent = '...';
+
+    var endpoint;
+    if (pinAction === 'cancel')   endpoint = '/api/cancel';
+    else if (pinAction === 'uncancel') endpoint = '/api/uncancel';
+    else if (pinAction === 'admin')    endpoint = '/api/verify-pin';
+    else if (pinAction === 'reset')    endpoint = '/api/reset';
+
+    fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pin: pin })
+    }).then(function(r) {
+      return r.json().then(function(data) { return { status: r.status, data: data }; });
+    }).then(function(result) {
+      if (result.status !== 200) {
+        document.getElementById('pinInput').classList.add('error');
+        document.getElementById('pinError').textContent =
+          result.status === 401 ? 'Incorrect PIN.' : (result.data.error || 'Something went wrong.');
+        document.getElementById('pinInput').value = '';
+        document.getElementById('pinInput').focus();
+        return;
+      }
+      if (pinAction === 'admin') {
+        adminMode = true;
+      } else if (pinAction === 'reset') {
+        appState.rsvps = result.data.rsvps || [];
+        appState.cancelled = result.data.cancelled || false;
+        appState.clearsAt = result.data.clearsAt || null;
+      } else {
+        appState.cancelled = result.data.cancelled;
+        if (result.data.clearsAt !== undefined) appState.clearsAt = result.data.clearsAt;
+      }
+      closePinModal();
+      render();
+    }).catch(function(e) { console.error(e); }).finally(function() {
+      btn.disabled = false;
+      btn.textContent = 'Confirm';
+    });
+  }
+
+  function setAttending(val) {
+    attending = val;
+    document.getElementById('btnYes').classList.toggle('active', val);
+    document.getElementById('btnNo').classList.toggle('active', !val);
+  }
+
+  function changeGuests(delta) {
+    guests = Math.max(0, guests + delta);
+    document.getElementById('guestsCount').textContent = guests;
+  }
+
+  function render() {
+    var cancelled = appState.cancelled;
+    var rsvps = appState.rsvps;
+    var clearsAt = appState.clearsAt;
+
+    // Header admin mode
+    document.getElementById('siteHeader').classList.toggle('admin-mode', adminMode);
+    document.getElementById('adminBadge').style.display = adminMode ? 'block' : 'none';
+
+    // Admin panel visibility
+    document.getElementById('adminPanel').style.display = adminMode ? 'block' : 'none';
+
+    // Bottom section
+    var bottomSection = document.getElementById('bottomSection');
+    if (adminMode) {
+      bottomSection.innerHTML = '<button class="btn btn-exit-admin" onclick="exitAdminMode()">✕ Exit Admin Mode</button>';
+    } else {
+      bottomSection.innerHTML = '<button class="btn btn-game-settings" onclick="openPinModal(\'admin\')">⚙️ Game Settings</button>';
+    }
+
+    // Admin cancel/uncancel button (inside admin panel)
+    if (adminMode) {
+      var adminCancelSection = document.getElementById('adminCancelSection');
+      if (cancelled) {
+        adminCancelSection.innerHTML = '<button class="btn btn-uncancel" onclick="openPinModal(\'uncancel\')">&#10003; Uncancel Game</button>';
+      } else {
+        adminCancelSection.innerHTML = '<button class="btn btn-cancel-game" onclick="openPinModal(\'cancel\')">Cancel today\'s game</button>';
+      }
+    }
+
+    // Banner
+    var banner = document.getElementById('cancelBanner');
+    var isCancelledNow = banner.classList.contains('cancelled');
+    if (isCancelledNow !== cancelled) {
+      banner.classList.toggle('cancelled', cancelled);
+    }
+
+    // My RSVP form
+    var currentName = document.getElementById('nameInput').value.trim() || myName;
+    var myRsvp = rsvps.find(function(r) {
+      return r.name.toLowerCase() === currentName.toLowerCase();
+    });
+
+    if (myRsvp) {
+      attending = myRsvp.attending;
+      guests = myRsvp.guests;
+      document.getElementById('guestsCount').textContent = guests;
+      setAttending(attending);
+      document.getElementById('actionRow').innerHTML =
+        '<button class="btn btn-primary" id="submitBtn" onclick="submitRsvp()">Update RSVP</button>' +
+        '<button class="btn btn-danger" onclick="removeRsvp()">Remove</button>';
+    } else {
+      document.getElementById('actionRow').innerHTML =
+        '<button class="btn btn-primary" id="submitBtn" onclick="submitRsvp()">Submit RSVP</button>';
+    }
+
+    // Stats
+    var attendingYes = rsvps.filter(function(r) { return r.attending; });
+    var totalGuests = attendingYes.reduce(function(s, r) { return s + r.guests; }, 0);
+    var totalBodies = attendingYes.length + totalGuests;
+
+    var statsText = attendingYes.length + ' attending';
+    if (totalGuests > 0) statsText += ' (+' + totalGuests + ' guests)';
+    document.getElementById('statsAttending').textContent = statsText;
+    document.getElementById('statsTotal').textContent = attendingYes.length > 0
+      ? totalBodies + ' total'
+      : '';
+
+    // Countdown
+    if (countdownInterval) clearInterval(countdownInterval);
+    var statsClears = document.getElementById('statsClears');
+    if (clearsAt) {
+      function updateCountdown() {
+        var ms = new Date(clearsAt) - Date.now();
+        if (ms <= 0) { statsClears.textContent = 'Clearing soon...'; return; }
+        var h = Math.floor(ms / 3600000);
+        var m = Math.floor((ms % 3600000) / 60000);
+        statsClears.textContent = 'Clears in ' + h + 'h ' + m + 'm';
+      }
+      updateCountdown();
+      countdownInterval = setInterval(updateCountdown, 30000);
+    } else {
+      statsClears.textContent = '';
+    }
+
+    // RSVP list
+    var listEl = document.getElementById('rsvpList');
+    if (rsvps.length === 0) {
+      listEl.innerHTML = '<div class="empty-state">No RSVPs yet. Be the first!</div>';
+    } else {
+      listEl.innerHTML = rsvps.map(function(r, i) {
+        var isYou = r.name.toLowerCase() === currentName.toLowerCase();
+        var removeBtn = adminMode
+          ? '<button class="rsvp-remove-btn" data-name="' + escHtml(r.name) + '" onclick="adminRemoveRsvp(this.dataset.name)">✕</button>'
+          : '';
+        return '<div class="rsvp-item">' +
+          '<span class="rsvp-num">' + (i + 1) + '</span>' +
+          '<span class="rsvp-name' + (isYou ? ' is-you' : '') + '">' + escHtml(r.name) + (isYou ? ' (you)' : '') + '</span>' +
+          (r.guests > 0 ? '<span class="rsvp-guests">+' + r.guests + '</span>' : '') +
+          '<span class="rsvp-status ' + (r.attending ? 'yes' : 'no') + '">' + (r.attending ? '&#10003;' : '&#10007;') + '</span>' +
+          removeBtn +
+          '</div>';
+      }).join('');
+    }
+  }
+
+  function escHtml(s) {
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  init();
+</script>
+</body>
+</html>

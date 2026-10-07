@@ -2,6 +2,7 @@
   "name": "simple-rsvp",
   "version": "1.0.0",
   "description": "Mobile-first RSVP app",
+  "license": "MIT",
   "main": "server.js",
   "engines": {
     "node": ">=20.12"

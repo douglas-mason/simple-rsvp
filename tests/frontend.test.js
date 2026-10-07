@@ -191,10 +191,10 @@ describe('render() — total with no guests', () => {
 });
 
 // ---------------------------------------------------------------------------
-// render() — cancelled game
+// render() — cancelled event
 // ---------------------------------------------------------------------------
 
-describe('render() with cancelled game', () => {
+describe('render() with cancelled event', () => {
   let w;
   beforeAll(async () => {
     w = await createWindow();
@@ -244,14 +244,14 @@ describe('admin mode rendering', () => {
       .toContain('Exit Admin Mode');
   });
 
-  it('admin cancel section shows cancel button when game is not cancelled', () => {
+  it('admin cancel section shows cancel button when event is not cancelled', () => {
     w.appState = { cancelled: false, rsvps: [], clearsAt: null };
     w.render();
     expect(w.document.getElementById('adminCancelSection').innerHTML)
       .toContain("Cancel today");
   });
 
-  it('admin cancel section shows uncancel button when game is cancelled', () => {
+  it('admin cancel section shows uncancel button when event is cancelled', () => {
     w.appState = { cancelled: true, rsvps: [], clearsAt: null };
     w.render();
     expect(w.document.getElementById('adminCancelSection').innerHTML)
@@ -313,9 +313,9 @@ describe('exitAdminMode()', () => {
     expect(w.document.getElementById('adminPanel').style.display).toBe('none');
   });
 
-  it('restores Game Settings button in bottom section', () => {
+  it('restores Event Settings button in bottom section', () => {
     expect(w.document.getElementById('bottomSection').innerHTML)
-      .toContain('Game Settings');
+      .toContain('Event Settings');
   });
 });
 

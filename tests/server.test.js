@@ -169,7 +169,7 @@ describe('POST /api/cancel', () => {
     expect(res.body.error).toMatch(/incorrect/i);
   });
 
-  it('cancels the game with correct PIN', async () => {
+  it('cancels the event with correct PIN', async () => {
     const res = await request(app).post('/api/cancel').send({ pin: PIN });
     expect(res.status).toBe(200);
     expect(res.body.cancelled).toBe(true);
@@ -200,7 +200,7 @@ describe('POST /api/uncancel', () => {
     expect(res.status).toBe(401);
   });
 
-  it('uncancels the game with correct PIN', async () => {
+  it('uncancels the event with correct PIN', async () => {
     const res = await request(app).post('/api/uncancel').send({ pin: PIN });
     expect(res.status).toBe(200);
     expect(res.body.cancelled).toBe(false);
@@ -229,7 +229,7 @@ describe('POST /api/verify-pin', () => {
     expect(res.body.ok).toBe(true);
   });
 
-  it('does not mutate game state', async () => {
+  it('does not mutate event state', async () => {
     await request(app).post('/api/rsvp').send({ name: 'Alice', attending: true, guests: 0 });
     await request(app).post('/api/cancel').send({ pin: PIN });
 

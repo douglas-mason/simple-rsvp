@@ -1,19 +1,19 @@
 # Simple RSVP
 
-Mobile-first web app for tracking who's in for a game or event. Players RSVP with their name, attendance status, and any extra guests. The list auto-clears after a configurable window so it stays fresh for the next game.
+Mobile-first web app for tracking who's in for an event. Players RSVP with their name, attendance status, and any extra guests. The list auto-clears after a configurable window so it stays fresh for the next event.
 
 ## Features
 
 - RSVP in/out with guest count
 - Live list updates every 10 seconds
-- Cancel/uncancel the game (PIN-protected, with rate limiting)
+- Cancel/uncancel the event (PIN-protected, with rate limiting)
 - RSVPs auto-clear after 48 hours (configurable)
 - Name remembered in `localStorage` across visits
 - Cross-promo callout and one-time welcome modal pointing at [All Aboard](https://www.getallaboard.app)
 
 ## All Aboard cross-promotion
 
-This app runs a single hard-coded game. [All Aboard](https://www.getallaboard.app) is the
+This app runs a single hard-coded event. [All Aboard](https://www.getallaboard.app) is the
 hosted product where anyone can create their own event links, so the page funnels visitors
 there in two places.
 
@@ -64,7 +64,7 @@ Open `http://localhost:3000`.
 
 ### Set your admin PIN
 
-Cancelling, uncancelling, resetting the game and entering admin mode all require a PIN.
+Cancelling, uncancelling, resetting the event and entering admin mode all require a PIN.
 **The default PIN is `0000`, and because this repository is public, anyone can look it up.**
 Set your own before you deploy:
 
@@ -112,9 +112,13 @@ Set these in `.env` (see `.env.example`) or in your host's environment.
 | `GET` | `/api/state` | Current RSVPs and cancelled status |
 | `POST` | `/api/rsvp` | Submit or update an RSVP |
 | `DELETE` | `/api/rsvp` | Remove an RSVP by name |
-| `POST` | `/api/cancel` | Cancel the game (requires PIN) |
-| `POST` | `/api/uncancel` | Uncancel the game (requires PIN) |
+| `POST` | `/api/cancel` | Cancel the event (requires PIN) |
+| `POST` | `/api/uncancel` | Uncancel the event (requires PIN) |
 | `POST` | `/api/verify-pin` | Check a PIN without changing state (requires PIN) |
 | `POST` | `/api/reset` | Clear all RSVPs and the cancelled status (requires PIN) |
 
 All PIN endpoints share the rate limit described above.
+
+## License
+
+[MIT](LICENSE)

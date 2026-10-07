@@ -272,7 +272,7 @@
       border: 1px solid #7a3030;
     }
     .btn-danger:hover { background: #6b2525; }
-    .btn-cancel-game {
+    .btn-cancel-event {
       width: 100%;
       background: transparent;
       color: var(--text-muted);
@@ -280,7 +280,7 @@
       font-size: 0.85rem;
       padding: 10px;
     }
-    .btn-cancel-game:hover {
+    .btn-cancel-event:hover {
       border-color: var(--red);
       color: #e88;
     }
@@ -292,7 +292,7 @@
       padding: 12px;
     }
     .btn-uncancel:hover { background: var(--blue-accent); }
-    .btn-game-settings {
+    .btn-event-settings {
       width: 100%;
       background: transparent;
       color: var(--text-muted);
@@ -301,7 +301,7 @@
       padding: 10px;
       font-weight: 600;
     }
-    .btn-game-settings:hover {
+    .btn-event-settings:hover {
       border-color: var(--text-muted);
       color: var(--text);
     }
@@ -521,14 +521,14 @@
 
 <header id="siteHeader">
   <h1>☑️ Simple RSVP</h1>
-  <div class="subtitle">Who's in for the game?</div>
+  <div class="subtitle">Who's in for the event?</div>
   <div id="adminBadge" style="display:none"><span class="admin-badge">⚙ Admin Mode</span></div>
 </header>
 
 <div class="main">
 
   <div id="cancelBanner" class="banner">
-    🚫 TODAY'S GAME IS CANCELLED
+    🚫 TODAY'S EVENT IS CANCELLED
   </div>
 
   <div class="promo-callout" id="promoCallout">
@@ -575,7 +575,7 @@
 
   <!-- Admin Panel — visible only in admin mode -->
   <div class="card admin-card" id="adminPanel" style="display:none">
-    <div class="card-title">⚙️ Game Settings</div>
+    <div class="card-title">⚙️ Event Settings</div>
 
     <div id="adminCancelSection"></div>
 
@@ -603,11 +603,11 @@
 
     <hr class="divider" style="margin: 14px 0">
 
-    <button class="btn btn-reset" onclick="openPinModal('reset')">🔄 Reset Game</button>
+    <button class="btn btn-reset" onclick="openPinModal('reset')">🔄 Reset Event</button>
   </div>
 
   <div id="bottomSection">
-    <button class="btn btn-game-settings" onclick="openPinModal('admin')">⚙️ Game Settings</button>
+    <button class="btn btn-event-settings" onclick="openPinModal('admin')">⚙️ Event Settings</button>
   </div>
 
 </div>
@@ -860,14 +860,14 @@
   function openPinModal(action) {
     pinAction = action;
     var titles = {
-      cancel:   "Cancel Today's Game",
-      uncancel: "Uncancel Today's Game",
-      admin:    "Game Settings",
-      reset:    "Reset Game"
+      cancel:   "Cancel Today's Event",
+      uncancel: "Uncancel Today's Event",
+      admin:    "Event Settings",
+      reset:    "Reset Event"
     };
     var subtitles = {
-      cancel:   "Enter the PIN to cancel today's game.",
-      uncancel: "Enter the PIN to uncancel today's game.",
+      cancel:   "Enter the PIN to cancel today's event.",
+      uncancel: "Enter the PIN to uncancel today's event.",
       admin:    "Enter the PIN to enter admin mode.",
       reset:    "Enter the PIN again to confirm. This will clear all RSVPs."
     };
@@ -973,16 +973,16 @@
     if (adminMode) {
       bottomSection.innerHTML = '<button class="btn btn-exit-admin" onclick="exitAdminMode()">✕ Exit Admin Mode</button>';
     } else {
-      bottomSection.innerHTML = '<button class="btn btn-game-settings" onclick="openPinModal(\'admin\')">⚙️ Game Settings</button>';
+      bottomSection.innerHTML = '<button class="btn btn-event-settings" onclick="openPinModal(\'admin\')">⚙️ Event Settings</button>';
     }
 
     // Admin cancel/uncancel button (inside admin panel)
     if (adminMode) {
       var adminCancelSection = document.getElementById('adminCancelSection');
       if (cancelled) {
-        adminCancelSection.innerHTML = '<button class="btn btn-uncancel" onclick="openPinModal(\'uncancel\')">&#10003; Uncancel Game</button>';
+        adminCancelSection.innerHTML = '<button class="btn btn-uncancel" onclick="openPinModal(\'uncancel\')">&#10003; Uncancel Event</button>';
       } else {
-        adminCancelSection.innerHTML = '<button class="btn btn-cancel-game" onclick="openPinModal(\'cancel\')">Cancel today\'s game</button>';
+        adminCancelSection.innerHTML = '<button class="btn btn-cancel-event" onclick="openPinModal(\'cancel\')">Cancel today\'s event</button>';
       }
     }
 
